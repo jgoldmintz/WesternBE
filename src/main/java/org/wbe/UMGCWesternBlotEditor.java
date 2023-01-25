@@ -48,7 +48,7 @@ public class UMGCWesternBlotEditor extends JFrame implements ActionListener
     private String imageDirectory;
     private String imageName;
     private String originalImage;
-    private String lastImage;
+    private String LastImage;
     private int opCount = 0;
     List<String> historyList = new ArrayList<>(
             List.of());
@@ -362,12 +362,12 @@ public class UMGCWesternBlotEditor extends JFrame implements ActionListener
             l_c.add(imageScrollPane);
             l_c.revalidate();
             historyList.clear();
-            lastImage = null;
+            LastImage = null;
             buttonLastImage.setEnabled(false);
-            File file1 = new File("../src/main/resources/bash_scripts/refresh_output.sh");
+            File file1 = new File("./refresh_output.sh");
             file1.setExecutable(true);
             try {
-                ProcessBuilder pb = new ProcessBuilder("../src/main/resources/bash_scripts/refresh_output.sh");
+                ProcessBuilder pb = new ProcessBuilder("./refresh_output.sh");
                 Process p = pb.start();
                 p.waitFor();
                 System.out.println("Script executed successfully");
@@ -401,7 +401,7 @@ public class UMGCWesternBlotEditor extends JFrame implements ActionListener
                 throw new RuntimeException(ex);
             }
 
-            lastImage = imagePath;
+            LastImage = imagePath;
             imagePath = newImage;
             File imgFile = new File(imagePath);
             BufferedImage img;
@@ -412,22 +412,16 @@ public class UMGCWesternBlotEditor extends JFrame implements ActionListener
             }
 
 
-            File file = new File("../src/main/resources/bash_scripts/bandDetection.sh");
+            File file = new File("./bandDetection.sh");
             file.setExecutable(true);
 
             try {
-                ProcessBuilder pb = new ProcessBuilder("../src/main/resources/bash_scripts/bandDetection.sh");
+                ProcessBuilder pb = new ProcessBuilder("./bandDetection.sh");
                 Map<String, String> env = pb.environment();
-                // call Path class allows the use of .getFileName() which is needed to pass the file name
-                // rather than the absolute path to the bash script
-                Path last_path = Paths.get(this.lastImage);
-                Path new_path = Paths.get(this.imagePath);
-                String input_file_name = String.valueOf(last_path.getFileName());
-                String output_file_name = String.valueOf(new_path.getFileName());
 
-                env.put("VAR1", input_file_name);
+                env.put("VAR1", this.LastImage);
                 env.put("VAR2", thickness.getText());
-                env.put("VAR3", output_file_name);
+                env.put("VAR3", this.imagePath);
                 Process p = pb.start();
                 p.waitFor();
                 System.out.println("Script executed successfully");
@@ -469,8 +463,9 @@ public class UMGCWesternBlotEditor extends JFrame implements ActionListener
 
 
             //start() will be in try catch
-            File file1 = new File("../src/main/resources/bash_scripts/band_detection_real.sh");
+            File file1 = new File("./band_detection_real.sh");
             file1.setExecutable(true);
+
 
 
             try {
@@ -481,10 +476,16 @@ public class UMGCWesternBlotEditor extends JFrame implements ActionListener
                 String imgDimensions = String.valueOf(width) + "x" + String.valueOf(height);
                 String threshold = String.valueOf(Radius.getText()) + "+" + String.valueOf(LowerLimit.getText()) + "%+" + String.valueOf(UpperLimit.getText())+"%";
                 String houghThreshold = String.valueOf("+"+HoughThreshold.getText());
-                Path last_path = Paths.get(this.lastImage);
-                Path new_path = Paths.get(this.imagePath);
-                String input_file_name = String.valueOf(last_path.getFileName());
-                String output_file_name = String.valueOf(new_path.getFileName());
+
+                Path pathtoFolder = Path.of(imageDirectory);
+                Path pathtoFile = pathtoFolder.resolve("composite.png");
+
+
+                LastImage = imagePath;
+                imagePath = String.valueOf(pathtoFile);
+
+
+
                 String var1 = "\"$VAR1\"";
                 String var2 = "\"$VAR2\"";
                 String var3 = "\"$VAR3\"";
@@ -492,12 +493,12 @@ public class UMGCWesternBlotEditor extends JFrame implements ActionListener
                 String var5 = "\"$VAR5\"";
                 String currentLine;
 
-                ProcessBuilder pb = new ProcessBuilder("../src/main/resources/bash_scripts/band_detection_real.sh");
+                ProcessBuilder pb = new ProcessBuilder("./band_detection_real.sh");
 
                 Map<String, String> env = pb.environment();
 
-                env.put("VAR1", this.imageDirectory);
-                env.put("VAR2", input_file_name);
+                env.put("VAR1", this.LastImage);
+                env.put("VAR2", this.LastImage);
                 env.put("VAR3", threshold);
                 env.put("VAR4", imgDimensions);
                 env.put("VAR5", houghThreshold);
@@ -506,7 +507,7 @@ public class UMGCWesternBlotEditor extends JFrame implements ActionListener
 
 
                 FileReader istream;
-                istream = new FileReader("../src/main/resources/bash_scripts/band_detection_real.sh");
+                istream = new FileReader("./band_detection_real.sh");
                 BufferedReader reader;
                 reader = new BufferedReader(istream);
 
@@ -517,8 +518,8 @@ public class UMGCWesternBlotEditor extends JFrame implements ActionListener
 
                 while((currentLine = reader.readLine()) != null) {
 
-                    currentLine = currentLine.replace(var1, this.imageDirectory);
-                    currentLine = currentLine.replace(var2, input_file_name);
+                    currentLine = currentLine.replace(var1, this.LastImage);
+                    currentLine = currentLine.replace(var2, this.LastImage);
                     currentLine = currentLine.replace(var3, threshold);
                     currentLine = currentLine.replace(var4, imgDimensions);
                     currentLine = currentLine.replace(var5, houghThreshold);
@@ -538,13 +539,9 @@ public class UMGCWesternBlotEditor extends JFrame implements ActionListener
             }
 
 
-            Path pathtoFolder = Path.of(imageDirectory);
-            Path pathtoFile = pathtoFolder.resolve("composite.png");
-            lastImage = imagePath;
-            imagePath = String.valueOf(pathtoFile);
+
             File imgFile = new File(imagePath);
             BufferedImage img;
-
             try {
                 img = ImageIO.read(imgFile);
             } catch (IOException ex) {
@@ -615,7 +612,7 @@ public class UMGCWesternBlotEditor extends JFrame implements ActionListener
                 throw new RuntimeException(ex);
             }
             // Update image path and reload image in JScrollPane
-            lastImage = imagePath;
+            LastImage = imagePath;
             imagePath = newImage;
 
             File imgFile = new File(imagePath);
@@ -628,24 +625,25 @@ public class UMGCWesternBlotEditor extends JFrame implements ActionListener
 
             //Update permissions for bash script
 
-            File file1 = new File("../src/main/resources/bash_scripts/brightness_contrast.sh");
+            File file1 = new File("./brightness_contrast.sh");
             file1.setExecutable(true);
 
             // Process builder calls bash script
             try {
-                ProcessBuilder pb = new ProcessBuilder("../src/main/resources/bash_scripts/brightness_contrast.sh");
+                ProcessBuilder pb = new ProcessBuilder("./brightness_contrast.sh");
                 Map<String, String> env = pb.environment();
                 // call Path class allows the use of .getFileName() which is needed to pass the file name
                 // rather than the absolute path to the bash script
-                Path last_path = Paths.get(this.lastImage);
-                Path new_path = Paths.get(this.imagePath);
-                String input_file_name = String.valueOf(last_path.getFileName());
-                String output_file_name = String.valueOf(new_path.getFileName());
+               // Path last_path = Paths.get(this.LastImage);
+                //System.out.println(last_path);
+                //Path new_path = Paths.get(this.imagePath);
+                //String input_file_name = String.valueOf(last_path.getFileName());
+                //String output_file_name = String.valueOf(new_path.getFileName());
 
-                env.put("VAR1", input_file_name);
+                env.put("VAR1", this.LastImage);
                 env.put("VAR2", String.valueOf(sliderB.getValue()));
                 env.put("VAR3", String.valueOf(sliderC.getValue()));
-                env.put("VAR4", output_file_name);
+                env.put("VAR4", this.imagePath);
                 Process p = pb.start();
                 p.waitFor();
                 System.out.println("Script executed successfully");
@@ -687,7 +685,7 @@ public class UMGCWesternBlotEditor extends JFrame implements ActionListener
                 // execute the operation
                 cmd.run(op);
                 historyList.add("resize: " + Integer.parseInt(width.getText()) + "x" + Integer.parseInt(height.getText()));
-                lastImage = imagePath;
+                LastImage = imagePath;
                 imagePath = newImage;
                 File imgFile = new File(imagePath);
                 BufferedImage img;
@@ -699,24 +697,24 @@ public class UMGCWesternBlotEditor extends JFrame implements ActionListener
 
                 //Update permissions for bash script
 
-                File file1 = new File("../src/main/resources/bash_scripts/resize.sh");
+                File file1 = new File("./resize.sh");
                 file1.setExecutable(true);
 
                 // Process builder calls bash script
                 try {
-                    ProcessBuilder pb = new ProcessBuilder("../src/main/resources/bash_scripts/resize.sh");
+                    ProcessBuilder pb = new ProcessBuilder("./resize.sh");
                     Map<String, String> env = pb.environment();
                     // call Path class allows the use of .getFileName() which is needed to pass the file name
                     // rather than the absolute path to the bash script
-                    Path last_path = Paths.get(this.lastImage);
-                    Path new_path = Paths.get(this.imagePath);
-                    String input_file_name = String.valueOf(last_path.getFileName());
-                    String output_file_name = String.valueOf(new_path.getFileName());
+                   // Path last_path = Paths.get(this.LastImage);
+                   // Path new_path = Paths.get(this.imagePath);
+                   // String input_file_name = String.valueOf(last_path.getFileName());
+                   // String output_file_name = String.valueOf(new_path.getFileName());
 
-                    env.put("VAR1", input_file_name);
+                    env.put("VAR1", this.LastImage);
                     env.put("VAR2", String.valueOf(width.getText()));
                     env.put("VAR3", String.valueOf(height.getText()));
-                    env.put("VAR4", output_file_name);
+                    env.put("VAR4", this.imagePath);
 
                     Process p = pb.start();
                     p.waitFor();
@@ -754,7 +752,7 @@ public class UMGCWesternBlotEditor extends JFrame implements ActionListener
                 throw new RuntimeException(ex);
             }
             historyList.add("monochrome");
-            lastImage = imagePath;
+            LastImage = imagePath;
             imagePath = newImage;
             File imgFile = new File(imagePath);
             BufferedImage img;
@@ -765,22 +763,22 @@ public class UMGCWesternBlotEditor extends JFrame implements ActionListener
             }
             //Update permissions for bash script
 
-            File file1 = new File("../src/main/resources/bash_scripts/monochrome.sh");
+            File file1 = new File("./monochrome.sh");
             file1.setExecutable(true);
 
             // Process builder calls bash script
             try {
-                ProcessBuilder pb = new ProcessBuilder("../src/main/resources/bash_scripts/monochrome.sh");
+                ProcessBuilder pb = new ProcessBuilder("./monochrome.sh");
                 Map<String, String> env = pb.environment();
                 // call Path class allows the use of .getFileName() which is needed to pass the file name
                 // rather than the absolute path to the bash script
-                Path last_path = Paths.get(this.lastImage);
-                Path new_path = Paths.get(this.imagePath);
-                String input_file_name = String.valueOf(last_path.getFileName());
-                String output_file_name = String.valueOf(new_path.getFileName());
+               // Path last_path = Paths.get(this.LastImage);
+               // Path new_path = Paths.get(this.imagePath);
+               // String input_file_name = String.valueOf(last_path.getFileName());
+               // String output_file_name = String.valueOf(new_path.getFileName());
 
-                env.put("VAR1", input_file_name);
-                env.put("VAR2", output_file_name);
+                env.put("VAR1", this.LastImage);
+                env.put("VAR2", this.imagePath);
 
                 Process p = pb.start();
                 p.waitFor();
@@ -815,7 +813,7 @@ public class UMGCWesternBlotEditor extends JFrame implements ActionListener
             } catch (IOException | InterruptedException | IM4JavaException ex) {
                 throw new RuntimeException(ex);
             }
-            lastImage = imagePath;
+            LastImage = imagePath;
             imagePath = newImage;
             File imgFile = new File(imagePath);
             BufferedImage img;
@@ -827,22 +825,22 @@ public class UMGCWesternBlotEditor extends JFrame implements ActionListener
 
             //Update permissions for bash script
 
-            File file1 = new File("../src/main/resources/bash_scripts/invert.sh");
+            File file1 = new File("./invert.sh");
             file1.setExecutable(true);
 
             // Process builder calls bash script
             try {
-                ProcessBuilder pb = new ProcessBuilder("../src/main/resources/bash_scripts/invert.sh");
+                ProcessBuilder pb = new ProcessBuilder("./invert.sh");
                 Map<String, String>env = pb.environment();
                 // call Path class allows the use of .getFileName() which is needed to pass the file name
                 // rather than the absolute path to the bash script
-                Path last_path = Paths.get(this.lastImage);
-                Path new_path = Paths.get(this.imagePath);
-                String input_file_name = String.valueOf(last_path.getFileName());
-                String output_file_name = String.valueOf(new_path.getFileName());
+                //Path last_path = Paths.get(this.LastImage);
+                //Path new_path = Paths.get(this.imagePath);
+                //String input_file_name = String.valueOf(last_path.getFileName());
+                //String output_file_name = String.valueOf(new_path.getFileName());
 
-                env.put("VAR1", input_file_name);
-                env.put("VAR2", output_file_name);
+                env.put("VAR1", this.LastImage);
+                env.put("VAR2", this.imagePath);
                 Process p = pb.start();
                 p.waitFor();
                 System.out.println("Script executed successfully");
@@ -885,7 +883,7 @@ public class UMGCWesternBlotEditor extends JFrame implements ActionListener
             } catch (IOException | InterruptedException | IM4JavaException ex) {
                 throw new RuntimeException(ex);
             }
-            lastImage = imagePath;
+            LastImage = imagePath;
             imagePath = newImage;
             File imgFile = new File(imagePath);
             BufferedImage img;
@@ -897,24 +895,24 @@ public class UMGCWesternBlotEditor extends JFrame implements ActionListener
 
             //Update permissions for bash script
 
-            File file1 = new File("../src/main/resources/bash_scripts/sigmoidal.sh");
+            File file1 = new File("./sigmoidal.sh");
             file1.setExecutable(true);
 
             // Process builder calls bash script
             try {
-                ProcessBuilder pb = new ProcessBuilder("../src/main/resources/bash_scripts/sigmoidal.sh");
+                ProcessBuilder pb = new ProcessBuilder("./sigmoidal.sh");
                 Map<String, String> env = pb.environment();
                 // call Path class allows the use of .getFileName() which is needed to pass the file name
                 // rather than the absolute path to the bash script
-                Path last_path = Paths.get(this.lastImage);
-                Path new_path = Paths.get(this.imagePath);
-                String input_file_name = String.valueOf(last_path.getFileName());
-                String output_file_name = String.valueOf(new_path.getFileName());
+                //Path last_path = Paths.get(this.LastImage);
+                //Path new_path = Paths.get(this.imagePath);
+                //String input_file_name = String.valueOf(last_path.getFileName());
+                //String output_file_name = String.valueOf(new_path.getFileName());
 
-                env.put("VAR1", input_file_name);
+                env.put("VAR1", this.LastImage);
                 env.put("VAR2", String.valueOf(midpoint.getText()));
                 env.put("VAR3", String.valueOf(contrast.getText()));
-                env.put("VAR4", output_file_name);
+                env.put("VAR4", this.imagePath);
                 Process p = pb.start();
                 p.waitFor();
                 System.out.println("Script executed successfully");
@@ -952,7 +950,7 @@ public class UMGCWesternBlotEditor extends JFrame implements ActionListener
 
         else if (e.getSource() == buttonLastImage) {
             opCount--;
-            imagePath = lastImage;
+            imagePath = LastImage;
             File imgFile = new File(imagePath);
             BufferedImage img;
             try {
@@ -963,12 +961,12 @@ public class UMGCWesternBlotEditor extends JFrame implements ActionListener
 
             //Update permissions for bash script
 
-            File file1 = new File("../src/main/resources/bash_scripts/remove_last.sh");
+            File file1 = new File("./remove_last.sh");
             file1.setExecutable(true);
 
             // Process builder calls bash script
             try {
-                ProcessBuilder pb = new ProcessBuilder("../src/main/resources/bash_scripts/remove_last.sh");
+                ProcessBuilder pb = new ProcessBuilder("./remove_last.sh");
                 Process p = pb.start();
                 p.waitFor();
                 System.out.println("Script executed successfully");

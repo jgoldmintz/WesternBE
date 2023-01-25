@@ -1,3 +1,5 @@
+
+
 package org.im4java.core;
 
 public class IMOperation extends IMOps {
