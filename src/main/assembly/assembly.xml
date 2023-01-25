@@ -2,12 +2,12 @@
 
 <assembly>
     <id>bin</id>
-    <!-- Specifies that our binary distribution is a zip package -->
+
     <formats>
         <format>zip</format>
     </formats>
 
-    <!-- Adds the dependencies of our application to the lib directory -->
+    <!-- Adds the dependencies to the lib directory -->
     <dependencySets>
         <dependencySet>
             <!--
@@ -22,7 +22,7 @@
 
     <fileSets>
         <!--
-            Adds startup scripts to the root directory of zip package. The startup
+            Adds shell scripts to the root directory of zip package. The shell
             scripts are copied from the src/main/scripts directory.
         -->
         <fileSet>
@@ -33,7 +33,7 @@
             </includes>
         </fileSet>
         <!--
-            Adds the jar file of our example application to the root directory
+            Adds the jar file of to the root directory
             of the created zip package.
         -->
         <fileSet>
