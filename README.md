@@ -1,10 +1,10 @@
 # UMGCWesternBlotEditor
+  Maintained version of https://github.com/DAntwine313/WesternBlotEditor
 
-Maintained version of https://github.com/DAntwine313/WesternBlotEditor
+Description:
 
-This program integrates Image Magick with an user interface, for the purposes of better imaging for Western Blot gels.
+This program integrates im4java into a GUI for the purpose of altering gel images and generating a shell script for reproducible results.
 
-For best results please create a folder for each image to work on as intermediates are created after each modification
 
 Button/tools functions:
 -
