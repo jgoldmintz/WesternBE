@@ -2,7 +2,7 @@
   Maintained version of https://github.com/DAntwine313/WesternBlotEditor
 
 Description:
-
+-
 This program integrates im4java into a GUI for the purpose of altering gel images and generating a shell script for reproducible results.
 
 
