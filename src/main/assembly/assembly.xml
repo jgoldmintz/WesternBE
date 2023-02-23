@@ -24,7 +24,7 @@
         <!--
             Adds shell scripts to the root directory of zip package. The shell
             scripts are copied from the src/main/scripts directory.
-        -->
+
         <fileSet>
             <directory>${project.build.scriptSourceDirectory}</directory>
             <outputDirectory></outputDirectory>
@@ -32,7 +32,7 @@
                 <include>*.sh</include>
             </includes>
         </fileSet>
-        <!--
+
             Adds the jar file of to the root directory
             of the created zip package.
         -->
