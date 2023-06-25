@@ -1,6 +1,5 @@
 package org.wbe;
 
-
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -8,27 +7,33 @@ import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
 import java.io.*;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.List;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
-
-import org.im4java.core.CommandException;
-import org.im4java.core.ConvertCmd;
-import org.im4java.core.IMOperation;
-import org.im4java.core.IM4JavaException;
-import org.im4java.script.AbstractScriptGenerator;
-import org.im4java.script.CmdScriptGenerator;
-import org.im4java.script.ScriptGenerator;
+import org.im4java.core.*;
 
 public class UMGCWesternBlotEditor extends JFrame implements ActionListener {
+    /*public void path(){
+        originalImage = imagePath;
+        File imgFile = new File(imagePath);
+        BufferedImage img;
+        try {
+            img = ImageIO.read(imgFile);
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
+        }
+        ImageIcon icon = new ImageIcon(img);
+        JLabel image = new JLabel(icon);
+        l_c.remove(imageScrollPane);
+        imageScrollPane = new JScrollPane(image);
+        l_c.add(imageScrollPane);
+        l_c.revalidate();
+    }*/
     private final JButton buttonResize;
     private final JButton buttonEdge;
-    private final JButton buttonScriptEdge;
     private final JButton buttonMonochrome;
     private final JButton buttonInvert;
     private final JButton buttonBrightnessContrast;
@@ -38,9 +43,7 @@ public class UMGCWesternBlotEditor extends JFrame implements ActionListener {
 
     // test jbutton
 
-    private final JButton generateScript;
     private final JButton exportHistory;
-    private final JButton OutScript;
     private final JMenuItem fileOpen;
     private final JMenuItem fileSaveAs;
     private final JMenuItem editReset;
@@ -50,25 +53,22 @@ public class UMGCWesternBlotEditor extends JFrame implements ActionListener {
     private final JMenuItem toolsResize;
     private final JMenuItem toolsMonochrome;
     private final JMenuItem toolsInvert;
-    private final JMenuItem scriptEdge;
     private final JMenuItem historyShowHistory;
 
     private final JMenuItem ScriptGen;
     private JScrollPane imageScrollPane;
     private final Container l_c;
     private String imagePath;
-    private String imageDirectory;
-    private String imageName;
+    private final String imageDirectory;
+    private final String imageName;
     private String originalImage;
     private String LastImage;
     private int opCount = 0;
-    List<String> historyList = new ArrayList<>(
-            List.of());
+    List<String> historyList = new ArrayList<>(List.of());
 
-    LinkedList<String> script = new LinkedList<>();
-    IMOperation opf = new IMOperation();
+    List<String> script = new ArrayList<>(List.of());
+    //IMOperation opf = new IMOperation();
 
-    //List<String> ttscript = new ArrayList<>();
     private String extension;
 
     public UMGCWesternBlotEditor() throws IOException {
@@ -84,7 +84,7 @@ public class UMGCWesternBlotEditor extends JFrame implements ActionListener {
         buttonEdge = new JButton("Edge");
         buttonEdge.addActionListener(this);
 
-        buttonScriptEdge = new JButton("Edge");
+        JButton buttonScriptEdge = new JButton("Edge");
         buttonScriptEdge.addActionListener(this);
 
         buttonMonochrome = new JButton("Monochrome");
@@ -102,7 +102,7 @@ public class UMGCWesternBlotEditor extends JFrame implements ActionListener {
         buttonLastImage = new JButton("Get Last Image");
         buttonLastImage.addActionListener(this);
 
-        generateScript = new JButton("Output script");
+        JButton generateScript = new JButton("Output script");
         generateScript.addActionListener(this);
 
         /* ********************************************** Create menu items **********************************************/
@@ -124,14 +124,14 @@ public class UMGCWesternBlotEditor extends JFrame implements ActionListener {
         toolsMonochrome.addActionListener(this);
         toolsInvert = new JMenuItem("Invert");
         toolsInvert.addActionListener(this);
-        scriptEdge = new JMenuItem("Edge Detection Bash Script");
+        JMenuItem scriptEdge = new JMenuItem("Edge Detection Bash Script");
         scriptEdge.addActionListener(this);
         historyShowHistory = new JMenuItem("Show History");
         historyShowHistory.addActionListener(this);
         exportHistory = new JButton("Export History");
         exportHistory.addActionListener(this);
-        OutScript = new JButton("Generate Script");
-        OutScript.addActionListener(this);
+        JButton outScript = new JButton("Generate Script");
+        outScript.addActionListener(this);
         ScriptGen = new JMenuItem("Generate Script");
         ScriptGen.addActionListener(this);
 
@@ -139,18 +139,24 @@ public class UMGCWesternBlotEditor extends JFrame implements ActionListener {
 
         /* ********************************************** Create Menu and Add Menu Items **********************************************/
 
+        /*
+        TODO:
+          Adjust the quick keystrokes so that the event is stored under a singe if statement using the getModifiedEx()
+          function.
+         */
+        //FILE MENU
 
-        ///FILE MENU
+
         JMenu file = new JMenu("File");
         file.setMnemonic('F'); // Alt -F will access files
         //BUTTONS UNDER FILE MENU//
         //quick keystrokes -> Open = Ctrl-O
         file.add(fileOpen);
-        fileOpen.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, InputEvent.CTRL_MASK));
+        fileOpen.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, InputEvent.CTRL_DOWN_MASK));
 
         // quick key strokes ->  Save As = Ctrl-A
         file.add(fileSaveAs);
-        fileSaveAs.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_A, InputEvent.CTRL_MASK));
+        fileSaveAs.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_A, InputEvent.CTRL_DOWN_MASK));
 
         ///EDIT MENU
         JMenu edit = new JMenu("Edit");
@@ -158,7 +164,7 @@ public class UMGCWesternBlotEditor extends JFrame implements ActionListener {
         //BUTTONS UNDER EDIT MENU
         //quick keystrokes -> Reset Image = Ctrl- R
         edit.add(editReset);
-        editReset.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_R, InputEvent.CTRL_MASK));
+        editReset.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_R, InputEvent.CTRL_DOWN_MASK));
 
         JMenu tools = new JMenu("Tools");
         tools.setMnemonic('T'); // Alt -T will access Tools
@@ -264,7 +270,8 @@ public class UMGCWesternBlotEditor extends JFrame implements ActionListener {
         l_c.add(imageScrollPane, BorderLayout.CENTER);
         pack();
         setVisible(true);
-        try {
+
+        /*try {
             FileReader istream;
             istream = new FileReader("output.sh");
             BufferedReader reader;
@@ -280,19 +287,21 @@ public class UMGCWesternBlotEditor extends JFrame implements ActionListener {
             System.out.println("Script Executed Successfully");
         } catch (IOException ex) {
             throw new RuntimeException(ex);
-        }
+        }*/
     }
 
-    public static void main(String[] args) throws IOException {
+   /* public static void main(String[] args) throws IOException {
         UMGCWesternBlotEditor t = new UMGCWesternBlotEditor();
         t.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         new File("output.sh").createNewFile();
 
-    }
+    }*/
 
     // action listeners
     public void actionPerformed(ActionEvent e) {
         //String myPath="../src/main/scripts/ImageMagick-7.0.10/bin";
+
+
 
         String newImage;
         if (e.getSource() == fileOpen) {
@@ -306,6 +315,9 @@ public class UMGCWesternBlotEditor extends JFrame implements ActionListener {
             if (returnVal == JFileChooser.APPROVE_OPTION) {
                 textFieldImagePath.setText(chooser.getSelectedFile().getAbsolutePath());
             }
+            if (returnVal == JFileChooser.CANCEL_OPTION) {
+                textFieldImagePath.setText(imagePath);
+            }
 
             imagePath = textFieldImagePath.getText();
             if (imagePath.contains(".jpg"))
@@ -317,7 +329,8 @@ public class UMGCWesternBlotEditor extends JFrame implements ActionListener {
             else if (imagePath.contains(".heic"))
                 extension = ".heic";
             // Set original path to use with reset
-            originalImage = imagePath;
+            //path();
+            imagePath = originalImage;
             File imgFile = new File(imagePath);
             BufferedImage img;
             try {
@@ -330,8 +343,8 @@ public class UMGCWesternBlotEditor extends JFrame implements ActionListener {
             l_c.remove(imageScrollPane);
             imageScrollPane = new JScrollPane(image);
             l_c.add(imageScrollPane);
-            historyList.clear();
             l_c.revalidate();
+            historyList.clear();
             buttonLastImage.setEnabled(false);
         }
         else if (e.getSource() == fileSaveAs) {
@@ -374,6 +387,7 @@ public class UMGCWesternBlotEditor extends JFrame implements ActionListener {
         }
         else if (e.getSource() == buttonReset | e.getSource() == editReset) {
             opCount = 0;
+            //path();
             imagePath = originalImage;
             File imgFile = new File(imagePath);
             BufferedImage img;
@@ -382,7 +396,6 @@ public class UMGCWesternBlotEditor extends JFrame implements ActionListener {
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
             }
-
             ImageIcon icon = new ImageIcon(img);
             JLabel image = new JLabel(icon);
             l_c.remove(imageScrollPane);
@@ -392,7 +405,7 @@ public class UMGCWesternBlotEditor extends JFrame implements ActionListener {
             historyList.clear();
             LastImage = null;
             buttonLastImage.setEnabled(false);
-            File file1 = new File("./refresh_output.sh");
+            /*File file1 = new File("./refresh_output.sh");
             file1.setExecutable(true);
             try {
                 ProcessBuilder pb = new ProcessBuilder("./refresh_output.sh");
@@ -401,7 +414,7 @@ public class UMGCWesternBlotEditor extends JFrame implements ActionListener {
                 System.out.println("Script executed successfully");
             } catch (IOException | InterruptedException ex) {
                 throw new RuntimeException(ex);
-            }
+            }*/
 
         }
         else if (e.getSource() == buttonEdge | e.getSource() == toolsEdge) {
@@ -413,56 +426,53 @@ public class UMGCWesternBlotEditor extends JFrame implements ActionListener {
             edgePanel.add(thickness);
             JOptionPane.showConfirmDialog(null, edgePanel,
                     "Edge Thickness", JOptionPane.OK_CANCEL_OPTION);
+
             // ImageMagick Call
             ConvertCmd cmd = new ConvertCmd();
+
             // create the operation, add images and operators/options
             IMOperation op = new IMOperation();
-            op.addImage(imagePath);
-            op.edge(Double.parseDouble(thickness.getText()));
-            newImage = imagePath.replace(extension, "_" + opCount + extension);
-            op.addImage(newImage);
-            historyList.add("edge: " + thickness.getText());
+            IMOperation opshell = new IMOperation();
 
+            opshell.addImage(imageName);
+            op.addImage(imagePath);
+
+            op.edge(Double.parseDouble(thickness.getText()));
+            opshell.edge(Double.parseDouble(thickness.getText()));
+
+
+            newImage = imagePath.replace(extension, "_" + opCount + extension);
+            String newImageshell = imageName.replace(extension, "_" + opCount + extension);
+
+            opshell.addImage(newImageshell);
+            op.addImage(newImage);
+
+            historyList.add("edge: " + thickness.getText());
 
             // execute the operation
             try {
-                //cmd.setSearchPath(myPath);
+
                 cmd.run(op);
             } catch (IOException | InterruptedException | IM4JavaException ex) {
                 throw new RuntimeException(ex);
             }
-            script.add(String.valueOf(op.edge(Double.parseDouble(thickness.getText()))));
 
-            //System.out.println(script);
-            //ttscript.add(String.valueOf(op.edge(Double.parseDouble(thickness.getText())).getCmdArgs()));
+            script.add("magick " + opshell.getCmdArgs()+"\n");
+
             LastImage = imagePath;
             imagePath = newImage;
+
+
             File imgFile = new File(imagePath);
+           // File imgFileshell = new File(newImageshell);
             BufferedImage img;
+            //BufferedImage imgshell;
             try {
                 img = ImageIO.read(imgFile);
+              //  imgshell = ImageIO.read(imgFileshell);
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
             }
-
-
-            /*File file = new File("./bandDetection.sh");
-            file.setExecutable(true);
-
-            try {
-                ProcessBuilder pb = new ProcessBuilder("./bandDetection.sh");
-                Map<String, String> env = pb.environment();
-
-                env.put("VAR1", this.LastImage);
-                env.put("VAR2", thickness.getText());
-                env.put("VAR3", this.imagePath);
-                Process p = pb.start();
-                p.waitFor();
-                System.out.println("Script executed successfully");
-            } catch (InterruptedException | IOException var33) {
-                throw new RuntimeException(var33);
-            }*/
-
 
             ImageIcon icon = new ImageIcon(img);
             JLabel image = new JLabel(icon);
@@ -472,7 +482,8 @@ public class UMGCWesternBlotEditor extends JFrame implements ActionListener {
             l_c.revalidate();
             buttonLastImage.setEnabled(true);
         }
-        else if (e.getSource() == buttonScriptEdge | e.getSource() == scriptEdge) {
+        /* FIXME
+            else if (e.getSource() == buttonScriptEdge | e.getSource() == scriptEdge) {
             opCount++;
             JTextField Radius = new JTextField();
             JTextField LowerLimit = new JTextField();
@@ -490,88 +501,62 @@ public class UMGCWesternBlotEditor extends JFrame implements ActionListener {
             CannyThreshold.add(HoughThreshold);
             JOptionPane.showConfirmDialog(null, CannyThreshold,
                     "Canny Edge Detection Parameter", JOptionPane.OK_CANCEL_OPTION);
-
-
             //start() will be in try catch
             File file1 = new File("./band_detection_real.sh");
             file1.setExecutable(true);
-
-
             try {
-
                 BufferedImage imgDim = ImageIO.read(new File(imagePath));
                 int width = imgDim.getWidth();
                 int height = imgDim.getHeight();
-                String imgDimensions = String.valueOf(width) + "x" + String.valueOf(height);
-                String threshold = String.valueOf(Radius.getText()) + "+" + String.valueOf(LowerLimit.getText()) + "%+" + String.valueOf(UpperLimit.getText()) + "%";
-                String houghThreshold = String.valueOf("+" + HoughThreshold.getText());
-
+                String imgDimensions = width + "x" + height;
+                String threshold = Radius.getText() + "+" + LowerLimit.getText() + "%+" + UpperLimit.getText() + "%";
+                String houghThreshold = "+" + HoughThreshold.getText();
                 Path pathtoFolder = Path.of(imageDirectory);
                 Path pathtoFile = pathtoFolder.resolve("composite.png");
-
-
                 LastImage = imagePath;
                 imagePath = String.valueOf(pathtoFile);
                 Path last_path = Paths.get(this.LastImage);
-                //System.out.println(last_path);
                 Path new_path = Paths.get(this.imagePath);
                 String input_file_name = String.valueOf(last_path.getFileName());
                 String output_file_name = String.valueOf(new_path.getFileName());
-
-
                 String var1 = "\"$VAR1\"";
                 String var2 = "\"$VAR2\"";
                 String var3 = "\"$VAR3\"";
                 String var4 = "'$VAR4'";
                 String var5 = "\"$VAR5\"";
                 String currentLine;
-
                 ProcessBuilder pb = new ProcessBuilder("./band_detection_real.sh");
-
                 Map<String, String> env = pb.environment();
-
                 //env.put("VAR1", this.imageDirectory);
                 env.put("VAR2", input_file_name);
                 env.put("VAR3", threshold);
                 env.put("VAR4", imgDimensions);
                 env.put("VAR5", houghThreshold);
-
                 Process p = pb.start();
-
-
                 FileReader istream;
                 istream = new FileReader("./band_detection_real.sh");
                 BufferedReader reader;
                 reader = new BufferedReader(istream);
-
                 FileWriter ostream;
                 ostream = new FileWriter("output.sh", true);
                 BufferedWriter writer;
                 writer = new BufferedWriter(ostream);
-
                 while ((currentLine = reader.readLine()) != null) {
-
                     // currentLine = currentLine.replace(var1, input_file_name);
                     currentLine = currentLine.replace(var2, input_file_name);
                     currentLine = currentLine.replace(var3, threshold);
                     currentLine = currentLine.replace(var4, imgDimensions);
                     currentLine = currentLine.replace(var5, houghThreshold);
-
                     writer.write(currentLine + "\n");
                 }
-
                 reader.close();
                 writer.close();
                 p.waitFor();
-
                 System.out.println("Script executed successfully");
-
                 historyList.add("Edge Script(OS/Linux): radius: " + Radius.getText() + " lower limit: " + LowerLimit.getText() + " upper limit: " + UpperLimit.getText() + " Hough-line threshold: " + HoughThreshold.getText());
             } catch (IOException | InterruptedException ex) {
                 throw new RuntimeException(ex);
             }
-
-
             File imgFile = new File(imagePath);
             BufferedImage img;
             try {
@@ -587,11 +572,12 @@ public class UMGCWesternBlotEditor extends JFrame implements ActionListener {
             l_c.revalidate();
             buttonLastImage.setEnabled(true);
             System.out.println("Script executed successfully");
-        }
+             } */
         else if (e.getSource() == buttonBrightnessContrast | e.getSource() == toolsBC) {
             opCount++;
             // Pop up window for brightness contrast params
             //Change the JTextfield for brightness/contrast so that user can use slider to adjust value or type in the value.
+
             JPanel bcPanel = new JPanel();
             bcPanel.setLayout(new GridLayout(2, 1));
             JOptionPane optionBPane = new JOptionPane();
@@ -628,29 +614,42 @@ public class UMGCWesternBlotEditor extends JFrame implements ActionListener {
             bcPanel.add(optionCPane);
             JOptionPane.showConfirmDialog(null, bcPanel,
                     "Brightness / Contrast", JOptionPane.OK_CANCEL_OPTION);
+
             // ImageMagick Call
+
             ConvertCmd cmd = new ConvertCmd();
+
+            IMOperation opshell = new IMOperation();
             IMOperation op = new IMOperation();
+
+            opshell.addImage(imageName);
             op.addImage(imagePath);
+
+            opshell.brightnessContrast((double) sliderB.getValue(), (double) sliderC.getValue());
             op.brightnessContrast((double) sliderB.getValue(), (double) sliderC.getValue());
+
             // Label new image with update
+
+            String newImageshell = imageName.replace(extension, "_" + opCount + extension);
             newImage = imagePath.replace(extension, "_" + opCount + extension);
+
             // ImageMagick write newImage
+
+            opshell.addImage(newImageshell);
             op.addImage(newImage);
-            historyList.add("brightness: " + sliderB.getValue() + " contrast: " + sliderC.getValue());
 
             try {
-                //cmd.setSearchPath(myPath);
                 cmd.run(op);
-                //opf.addSubOperation(op);
             } catch (IOException | IM4JavaException | InterruptedException ex) {
                 throw new RuntimeException(ex);
             }
+            historyList.add("brightness: " + sliderB.getValue() + " contrast: " + sliderC.getValue());
             // Update image path and reload image in JScrollPane
             LastImage = imagePath;
             imagePath = newImage;
-            script.add(String.valueOf(op.brightnessContrast((double) sliderB.getValue(), (double) sliderC.getValue()).getCmdArgs()));
-            System.out.println(opf);
+
+            script.add("magick " + opshell.getCmdArgs()+"\n");
+
             File imgFile = new File(imagePath);
             BufferedImage img;
             try {
@@ -709,14 +708,26 @@ public class UMGCWesternBlotEditor extends JFrame implements ActionListener {
             resizePanel.add(height);
             JOptionPane.showConfirmDialog(null, resizePanel,
                     "Resize Dimensions", JOptionPane.OK_CANCEL_OPTION);
+
             // ImageMagick Call
+
             ConvertCmd cmd = new ConvertCmd();
+
             // create the operation, add images and operators/options
+
+            IMOperation opshell = new IMOperation();
             IMOperation op = new IMOperation();
 
+            opshell.addImage(imageName);
             op.addImage(imagePath);
+
+            opshell.resize(Integer.parseInt(width.getText()), Integer.parseInt(height.getText()));
             op.resize(Integer.parseInt(width.getText()), Integer.parseInt(height.getText()));
+
+            String newImageshell = imageName.replace(extension, "_" + opCount + extension);
             newImage = imagePath.replace(extension, "_" + opCount + extension);
+
+            opshell.addImage(newImageshell);
             op.addImage(newImage);
             
             // execute the operation
@@ -737,35 +748,8 @@ public class UMGCWesternBlotEditor extends JFrame implements ActionListener {
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
             }
-            //script.add(String.valueOf(op.resize(Integer.parseInt(width.getText(), Integer.parseInt(height.getText()))).getCmdArgs()));
 
-                /*Update permissions for bash script
-
-                File file1 = new File("./resize.sh");
-                file1.setExecutable(true);
-
-                // Process builder calls bash script
-                try {
-                    ProcessBuilder pb = new ProcessBuilder("./resize.sh");
-                    Map<String, String> env = pb.environment();
-                    // call Path class allows the use of .getFileName() which is needed to pass the file name
-                    // rather than the absolute path to the bash script
-                    // Path last_path = Paths.get(this.LastImage);
-                    // Path new_path = Paths.get(this.imagePath);
-                    // String input_file_name = String.valueOf(last_path.getFileName());
-                    // String output_file_name = String.valueOf(new_path.getFileName());
-
-                    env.put("VAR1", this.LastImage);
-                    env.put("VAR2", String.valueOf(width.getText()));
-                    env.put("VAR3", String.valueOf(height.getText()));
-                    env.put("VAR4", this.imagePath);
-
-                    Process p = pb.start();
-                    p.waitFor();
-                    System.out.println("Script executed successfully");
-                } catch (InterruptedException | IOException var29) {
-                    throw new RuntimeException(var29);
-                }*/
+            script.add("magick " + opshell.getCmdArgs()+"\n");
 
                 ImageIcon icon = new ImageIcon(img);
                 JLabel image = new JLabel(icon);
@@ -777,18 +761,30 @@ public class UMGCWesternBlotEditor extends JFrame implements ActionListener {
         }
         else if (e.getSource() == buttonMonochrome | e.getSource() == toolsMonochrome) {
             opCount++;
+
             // ImageMagick Call
             ConvertCmd cmd = new ConvertCmd();
+
             // create the operation, add images and operators/options
+
+            IMOperation opshell = new IMOperation();
             IMOperation op = new IMOperation();
+
+            opshell.addImage(imageName);
             op.addImage(imagePath);
+
+            opshell.monochrome();
             op.monochrome();
+
+            String newImageshell = imageName.replace(extension, "_" + opCount + extension);
             newImage = imagePath.replace(extension, "_" + opCount + extension);
+
+            opshell.addImage(newImageshell);
             op.addImage(newImage);
+
             // execute the operation
 
             try {
-                //cmd.setSearchPath(myPath);
                 cmd.run(op);
 
             } catch (IOException | InterruptedException | IM4JavaException ex) {
@@ -806,33 +802,8 @@ public class UMGCWesternBlotEditor extends JFrame implements ActionListener {
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
             }
-            script.add(String.valueOf(op.monochrome().getCmdArgs()));
 
-            //Update permissions for bash script
-
-            /*File file1 = new File("./monochrome.sh");
-            file1.setExecutable(true);
-
-            // Process builder calls bash script
-            try {
-                ProcessBuilder pb = new ProcessBuilder("./monochrome.sh");
-                Map<String, String> env = pb.environment();
-                // call Path class allows the use of .getFileName() which is needed to pass the file name
-                // rather than the absolute path to the bash script
-                // Path last_path = Paths.get(this.LastImage);
-                // Path new_path = Paths.get(this.imagePath);
-                // String input_file_name = String.valueOf(last_path.getFileName());
-                // String output_file_name = String.valueOf(new_path.getFileName());
-
-                env.put("VAR1", this.LastImage);
-                env.put("VAR2", this.imagePath);
-
-                Process p = pb.start();
-                p.waitFor();
-                System.out.println("Script executed successfully");
-            } catch (InterruptedException | IOException var26) {
-                throw new RuntimeException(var26);
-            }*/
+            script.add("magick " + opshell.getCmdArgs()+"\n");
 
             ImageIcon icon = new ImageIcon(img);
             JLabel image = new JLabel(icon);
@@ -845,26 +816,40 @@ public class UMGCWesternBlotEditor extends JFrame implements ActionListener {
         else if (e.getSource() == buttonInvert | e.getSource() == toolsInvert) {
             opCount++;
             // ImageMagick Call
+
             ConvertCmd cmd = new ConvertCmd();
+
             // create the operation, add images and operators/options
+            IMOperation opshell = new IMOperation();
             IMOperation op = new IMOperation();
+
             op.addImage(imagePath);
+            opshell.addImage(imageName);
+
+            opshell.negate();
             op.negate();
+
             newImage = imagePath.replace(extension, "_" + opCount + extension);
-            historyList.add("invert/negate");
+            String newImageshell = imageName.replace(extension, "_" + opCount + extension);
+
+            opshell.addImage(newImageshell);
+            op.addImage(newImage);
 
             // execute the operation
+
             try {
                 cmd.run(op);
             } catch (IOException | InterruptedException | IM4JavaException ex) {
                 throw new RuntimeException(ex);
             }
+            historyList.add("invert/negate");
 
-            script.add(String.valueOf(op.negate().getCmdArgs()));
+            script.add("magick " + opshell.getCmdArgs()+"\n");
 
             LastImage = imagePath;
             imagePath = newImage;
             File imgFile = new File(imagePath);
+
             BufferedImage img;
             try {
                 img = ImageIO.read(imgFile);
@@ -872,30 +857,6 @@ public class UMGCWesternBlotEditor extends JFrame implements ActionListener {
                 throw new RuntimeException(ex);
             }
 
-            //Update permissions for bash script
-
-            File file1 = new File("./invert.sh");
-            file1.setExecutable(true);
-
-            // Process builder calls bash script
-            try {
-                ProcessBuilder pb = new ProcessBuilder("./invert.sh");
-                Map<String, String> env = pb.environment();
-                // call Path class allows the use of .getFileName() which is needed to pass the file name
-                // rather than the absolute path to the bash script
-                //Path last_path = Paths.get(this.LastImage);
-                //Path new_path = Paths.get(this.imagePath);
-                //String input_file_name = String.valueOf(last_path.getFileName());
-                //String output_file_name = String.valueOf(new_path.getFileName());
-
-                env.put("VAR1", this.LastImage);
-                env.put("VAR2", this.imagePath);
-                Process p = pb.start();
-                p.waitFor();
-                System.out.println("Script executed successfully");
-            } catch (InterruptedException | IOException var23) {
-                throw new RuntimeException(var23);
-            }
 
             ImageIcon icon = new ImageIcon(img);
             JLabel image = new JLabel(icon);
@@ -917,24 +878,40 @@ public class UMGCWesternBlotEditor extends JFrame implements ActionListener {
             CSPanel.add(contrast);
             JOptionPane.showConfirmDialog(null, CSPanel,
                     "Sigmoidal Contrasting", JOptionPane.OK_CANCEL_OPTION);
+
             // ImageMagick Call
+
             ConvertCmd cmd = new ConvertCmd();
+
             // create the operation, add images and operators/options
+
+            IMOperation opshell = new IMOperation();
             IMOperation op = new IMOperation();
+
+            opshell.addImage(imageName);
             op.addImage(imagePath);
+
+            opshell.sigmoidalContrast(Double.parseDouble(contrast.getText()), Double.parseDouble(midpoint.getText()));
             op.sigmoidalContrast(Double.parseDouble(contrast.getText()), Double.parseDouble(midpoint.getText()));
+
+            String newImageshell = imageName.replace(extension, "_" + opCount + extension);
             newImage = imagePath.replace(extension, "_" + opCount + extension);
+
             historyList.add("sigmoidal contrast: midpoint= " + midpoint.getText() + " contrast= " + midpoint.getText());
 
+            opshell.addImage(newImageshell);
             op.addImage(newImage);
+
             // execute the operation
+
             try {
-                //cmd.setSearchPath(myPath);
                 cmd.run(op);
             } catch (IOException | InterruptedException | IM4JavaException ex) {
                 throw new RuntimeException(ex);
             }
-            script.add(String.valueOf(op.sigmoidalContrast(Double.parseDouble(contrast.getText()), Double.parseDouble(midpoint.getText())).getCmdArgs()));
+
+            script.add("magick " + opshell.getCmdArgs()+"\n");
+
             LastImage = imagePath;
             imagePath = newImage;
             File imgFile = new File(imagePath);
@@ -1041,28 +1018,12 @@ public class UMGCWesternBlotEditor extends JFrame implements ActionListener {
             JFileChooser fileChooser = new JFileChooser();
             fileChooser.setDialogTitle("Specify a (.sh/.exe)file to save");
             int userSelection = fileChooser.showSaveDialog(null);
-            //String.valueOf(script).replace("[","");
-            //String.valueOf(script).replace("]","");
-            //System.out.println(ttscript);
-            IMOperation op = new IMOperation();
-            ConvertCmd cmd = new ConvertCmd();
-
-
             if (userSelection == JFileChooser.APPROVE_OPTION) {
-                PrintWriter output;
-                //cmd.createScript("./test.txt", opf);
                 try {
-                    output = new PrintWriter(fileChooser.getSelectedFile());
-                    output.write(String.valueOf(opf));
-                  //  for (int i = 1; i < script.size(); i++) {
-                        //op.addSubOperation(script.get(i));
-                        //output.write(script.getFirst() + "\n");
-
-                        //ttscript.init(ttscript.getWriter(),ttscript.getOperation(),ttscript.getProperties());
-                    //}
-
-                    //output.close();
-
+                    PrintWriter output = new PrintWriter(fileChooser.getSelectedFile());
+                    output.write("cd "+ imageDirectory+"\n");
+                    output.append(script.toString().replace("[","").replace("]","").replace(",","").strip());
+                    output.close();
                 } catch (FileNotFoundException ex) {
                     throw new RuntimeException(ex);
                 }
@@ -1073,3 +1034,13 @@ public class UMGCWesternBlotEditor extends JFrame implements ActionListener {
 }
 
 
+
+
+/*
+fixme
+    if there is more than one operation being performed, starting from the second operation, the last image is not
+    used as the initial image in the operation, and instead uses the very first image see ex below
+    op 1: magick 1.jpg -negate 1_1.jpg
+    op 2: magick 1.jpg -resize 500x250 1_2.jpg
+    op 3: magick 1.jpg -monochrome 1_3.jpg
+*/
